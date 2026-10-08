@@ -27,6 +27,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->square, SIGNAL(clicked()), this, SLOT(btnUnaryoperatorClicked()));
     connect(ui->root, SIGNAL(clicked()), this, SLOT(btnUnaryoperatorClicked()));
     connect(ui->zhengfu, SIGNAL(clicked()), this, SLOT(btnUnaryoperatorClicked()));
+    connect(ui->present, SIGNAL(clicked()), this, SLOT(btnUnaryoperatorClicked()));
+    //CE / C / ⌫ / . / = 几个按钮的对象名与 on_xxx_clicked() 槽名对应，
+    //由 setupUi() 里的 QMetaObject::connectSlotsByName() 自动连接，其中 CE 原来没有槽函数，现已补上
 
 }
 
@@ -180,26 +183,45 @@ void MainWindow::binaryOperatorClicked()
     }
 }
 
+//一元运算：±、%、1/X、X^2、√ 都只作用在当前显示的数字上
 void MainWindow::btnUnaryoperatorClicked()
 {
-    if (operand != "") {
-        double result = operand.toDouble();
-        operand = "";
+    QPushButton *btn = qobject_cast<QPushButton *>(sender());
+    if (btn == nullptr)
+        return;
 
-        QString op = qobject_cast<QPushButton *>(sender())->text();
+    //正在输入时用 operand，刚按完 "=" 或运算符时用显示区的结果
+    QString current = operand.isEmpty() ? ui->display->text() : operand;
+    if (current.isEmpty())
+        return;
 
-        if (op == "%")
-            result /= 100.0;
-        else if (op == "1/x")
-            result = 1 / result;
-        else if (op == "x^2")
-            result *= result;
-        else if (op == "√")   // ❗原图这里写成 ""，是错误，应该是平方根符号"√"
-            result = sqrt(result);
+    double result = current.toDouble();
+    QString op = operatorToken(btn->text());
 
-        ui->display->setText(QString::number(result));
+    if (op == "±") {                  //原来 ± 键虽然 connect 了，但 if 链里没有分支，按了没反应
+        result = -result;
+    } else if (op == "%") {
+        result /= 100.0;
+    } else if (op == "1/x") {
+        result = 1 / result;
+    } else if (op == "x^2") {
+        result *= result;
+    } else if (op == "√") {
+        result = sqrt(result);
     }
 
+    //运算结果继续作为当前操作数，这样 "√9 + 1 =" 还能接着算
+    operand = fromNumber(result);
+    m_startNewOperand = false;
+    ui->display->setText(operand);
+}
+
+//CE（clear entry）：只清掉当前正在输入的这一项，
+//之前已经入栈的操作数和运算符保持不变，这是它和 C 的区别
+void MainWindow::on_CE_clicked()
+{
+    operand.clear();
+    ui->display->setText(operand);
 }
 
 

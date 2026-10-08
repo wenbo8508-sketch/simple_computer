@@ -39,6 +39,8 @@ private slots:
 
     void on_C_clicked();
 
+    void on_CE_clicked();
+
     void binaryOperatorClicked();
 
     void btnUnaryoperatorClicked();
