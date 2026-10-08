@@ -140,11 +140,8 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 //二元运算：从操作数栈里取出栈顶的两个数，配合最近按下的运算符求值。
 //关键改动：算完的结果必须重新压回 operands，否则像 "5+3-2=" 这样的连续运算，
 //第二次求值时栈里已经没有操作数可用，只能返回 0（原程序最终显示 0 就是这个原因）。
-QString MainWindow::calculation(bool *ok)
+QString MainWindow::calculation()
 {
-    if (ok)
-        *ok = true;
-
     //操作数不足两个时不做二元运算，直接把当前值原样返回。
     //原实现在这里返回 QString::number(0)，于是 "5+" 之后显示被覆盖成 "0"，
     //"5=" 这种没有运算符的输入也会变成 0。

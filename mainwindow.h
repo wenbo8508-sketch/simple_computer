@@ -52,7 +52,7 @@ private:
     bool m_startNewOperand = false; //按完 "=" 后下一次输入数字要重新开始算式
     bool m_hasError = false;        //除数为 0、开方负数、结果溢出时进入错误状态
 
-    QString calculation(bool *ok = nullptr);      //取出栈顶两个操作数做一次二元运算
+    QString calculation();                      //取出栈顶两个操作数做一次二元运算，结果重新压回栈
     static QString fromNumber(double value);      //结果转显示文本（15 位有效数字）
     static QString operatorToken(const QString &buttonText);  //× ÷ 1/X X^2 → * / 1/x x^2
     void showError(const QString &message);       //显示"错误"并进入错误状态
