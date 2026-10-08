@@ -1,75 +1,139 @@
-/* 整体配色：深灰底，按键圆角 */
+/* ---------- 浅色主题：以白色为主，参照 Windows 自带计算器的浅色模式 ---------- */
+
+/* 窗口底色：浅灰（Win11 Mica 浅灰），文字用近黑色 */
 QMainWindow,
 QWidget#centralwidget {
-    background-color: #2b2f36;
+    background-color: #f3f3f3;
+    color: #1a1a1a;
+    font-family: "Microsoft YaHei UI", "Segoe UI", "Microsoft YaHei", sans-serif;
 }
 
-/* 显示区：黑底绿字，模拟计算器屏幕 */
+/* 显示区：不要黑底，直接融进浅色背景，只保留一根细分隔线，和大号深色数字 */
 QLineEdit#display {
-    background-color: #0f1115;
-    color: #7fe7a0;
-    border: 1px solid #3d4552;
+    background-color: #ffffff;
+    color: #1a1a1a;
+    border: 1px solid #e5e5e5;
     border-radius: 6px;
-    padding: 8px 12px;
-    font-family: "Consolas", "Courier New", monospace;
-    font-size: 28px;
-    font-weight: bold;
+    padding: 10px 14px;
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    font-size: 30px;
+    font-weight: 600;
 }
 
-/* 所有按键的通用样式 */
+/* 按键通用样式：白底 + 极浅描边 + 圆角，接近 Win11 的按键质感 */
 QPushButton {
-    color: #f2f2f2;
-    border: none;
+    background-color: #ffffff;
+    color: #1a1a1a;
+    border: 1px solid #e2e2e2;
+    border-bottom-width: 2px;
     border-radius: 6px;
     padding: 8px;
     font-size: 16px;
-    background-color: #3c424c;
 }
 
 QPushButton:hover {
-    background-color: #4c5563;
+    background-color: #f7f9fc;
+    border-color: #d6dde7;
 }
 
 QPushButton:pressed {
-    background-color: #2b3038;
+    background-color: #ececec;
+    border-color: #cfd4da;
+    color: #5a5a5a;
 }
 
-/* 数字键和小数点 */
+/* 数字键与小数点：纯白，最亮的一档 */
 QPushButton#num0, QPushButton#num1, QPushButton#num2, QPushButton#num3,
 QPushButton#num4, QPushButton#num5, QPushButton#num6, QPushButton#num7,
 QPushButton#num8, QPushButton#num9, QPushButton#point {
-    background-color: #33404f;
+    background-color: #ffffff;
+    font-size: 18px;
 }
 
-/* 运算符和等号 */
+QPushButton#num0:hover, QPushButton#num1:hover, QPushButton#num2:hover,
+QPushButton#num3:hover, QPushButton#num4:hover, QPushButton#num5:hover,
+QPushButton#num6:hover, QPushButton#num7:hover, QPushButton#num8:hover,
+QPushButton#num9:hover, QPushButton#point:hover {
+    background-color: #f5f8ff;
+}
+
+/* 运算符键：极浅的蓝灰底，和数字键区分但不刺眼 */
 QPushButton#addition, QPushButton#subtraction,
 QPushButton#multiple, QPushButton#divite {
-    background-color: #b1612c;
-    font-weight: bold;
+    background-color: #f0f4fa;
+    border-color: #dfe6f0;
+    font-size: 19px;
+    font-weight: 600;
 }
 
+QPushButton#addition:hover, QPushButton#subtraction:hover,
+QPushButton#multiple:hover, QPushButton#divite:hover {
+    background-color: #e6eefa;
+}
+
+/* 等号：用系统强调蓝，作为唯一的深色块，一眼能找到 */
 QPushButton#sum {
-    background-color: #2f7d4f;
-    font-weight: bold;
+    background-color: #0067c0;
+    border-color: #005dae;
+    color: #ffffff;
+    font-size: 19px;
+    font-weight: 600;
 }
 
-/* 功能键：C / CE / ⌫ / % / 1/X / X^2 / √ / ± */
-QPushButton#C, QPushButton#CE, QPushButton#del, QPushButton#present,
-QPushButton#fraction, QPushButton#square, QPushButton#root, QPushButton#zhengfu {
-    background-color: #57606f;
+QPushButton#sum:hover {
+    background-color: #1a76c8;
 }
 
+QPushButton#sum:pressed {
+    background-color: #005ba8;
+    color: #e8f2fb;
+}
+
+/* 功能键：% CE ⌫ 1/X X^2 √ ± —— 浅灰底、字号略小 */
+QPushButton#present, QPushButton#CE, QPushButton#del, QPushButton#fraction,
+QPushButton#square, QPushButton#root, QPushButton#zhengfu {
+    background-color: #f6f6f6;
+    border-color: #e0e0e0;
+    font-size: 14px;
+}
+
+QPushButton#present:hover, QPushButton#CE:hover, QPushButton#del:hover,
+QPushButton#fraction:hover, QPushButton#square:hover, QPushButton#root:hover,
+QPushButton#zhengfu:hover {
+    background-color: #efefef;
+}
+
+/* C 是全清，用很淡的红底提示，不用深色 */
 QPushButton#C {
-    background-color: #a53f3f;
-    font-weight: bold;
+    background-color: #fdf1f0;
+    border-color: #f0d5d3;
+    color: #b3261e;
+    font-weight: 600;
 }
 
+QPushButton#C:hover {
+    background-color: #fbe4e2;
+}
+
+QPushButton#C:pressed {
+    background-color: #f6d5d2;
+}
+
+/* 状态栏：白底 + 顶部细线，调试信息用中灰 */
 QStatusBar {
-    background-color: #23272e;
-    color: #9aa4b2;
+    background-color: #fbfbfb;
+    color: #6b6b6b;
+    border-top: 1px solid #e5e5e5;
+    font-size: 12px;
 }
 
+QStatusBar::item {
+    border: none;
+}
+
+/* 键盘提示：浅灰小字，不抢视觉重点 */
 QLabel#hintLabel {
-    color: #98a2b3;
+    color: #7a7a7a;
     font-size: 11px;
+    background: transparent;
 }
