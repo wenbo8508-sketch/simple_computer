@@ -1,0 +1,75 @@
+/* 整体配色：深灰底，按键圆角 */
+QMainWindow,
+QWidget#centralwidget {
+    background-color: #2b2f36;
+}
+
+/* 显示区：黑底绿字，模拟计算器屏幕 */
+QLineEdit#display {
+    background-color: #0f1115;
+    color: #7fe7a0;
+    border: 1px solid #3d4552;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+/* 所有按键的通用样式 */
+QPushButton {
+    color: #f2f2f2;
+    border: none;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 16px;
+    background-color: #3c424c;
+}
+
+QPushButton:hover {
+    background-color: #4c5563;
+}
+
+QPushButton:pressed {
+    background-color: #2b3038;
+}
+
+/* 数字键和小数点 */
+QPushButton#num0, QPushButton#num1, QPushButton#num2, QPushButton#num3,
+QPushButton#num4, QPushButton#num5, QPushButton#num6, QPushButton#num7,
+QPushButton#num8, QPushButton#num9, QPushButton#point {
+    background-color: #33404f;
+}
+
+/* 运算符和等号 */
+QPushButton#addition, QPushButton#subtraction,
+QPushButton#multiple, QPushButton#divite {
+    background-color: #b1612c;
+    font-weight: bold;
+}
+
+QPushButton#sum {
+    background-color: #2f7d4f;
+    font-weight: bold;
+}
+
+/* 功能键：C / CE / ⌫ / % / 1/X / X^2 / √ / ± */
+QPushButton#C, QPushButton#CE, QPushButton#del, QPushButton#present,
+QPushButton#fraction, QPushButton#square, QPushButton#root, QPushButton#zhengfu {
+    background-color: #57606f;
+}
+
+QPushButton#C {
+    background-color: #a53f3f;
+    font-weight: bold;
+}
+
+QStatusBar {
+    background-color: #23272e;
+    color: #9aa4b2;
+}
+
+QLabel#hintLabel {
+    color: #98a2b3;
+    font-size: 11px;
+}

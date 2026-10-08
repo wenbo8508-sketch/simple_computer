@@ -3,6 +3,7 @@
 #include <cmath>
 #include <QKeyEvent>
 #include <QPushButton>
+#include <QFile>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -21,6 +22,16 @@ MainWindow::MainWindow(QWidget *parent)
     for (QPushButton *btn : buttons)
         btn->setFocusPolicy(Qt::NoFocus);
     setFocus();                                   //程序启动后焦点就在主窗口上，可以直接用键盘输入
+
+    setWindowTitle(QStringLiteral("带键盘事件的计算器"));
+    ui->menubar->hide();                          //模板自带的空菜单栏没有菜单项，隐藏掉
+
+    //样式表美化界面：深色计算器屏幕 + 数字键/运算符键/功能键分色
+    QFile qss(QStringLiteral(":/style/style.qss"));
+    if (qss.open(QIODevice::ReadOnly)) {
+        setStyleSheet(QString::fromUtf8(qss.readAll()));
+        qss.close();
+    }
 
     connect(ui->num0, SIGNAL(clicked()), this, SLOT(btnNum_clicked()));
     connect(ui->num1, SIGNAL(clicked()), this, SLOT(btnNum_clicked()));
@@ -297,7 +308,7 @@ void MainWindow::binaryOperatorClicked()
     if (m_hasError)                         //错误状态下先按运算符没有意义，直接忽略
         return;
 
-    QString opcode = operatorToken(qobject_cast<QPushButton *>(sender())->text());
+    opcode = operatorToken(qobject_cast<QPushButton *>(sender())->text());   //记录本次按下的运算符
     ui->statusbar->showMessage("last operand " + operand);
 
     if (!operand.isEmpty()) {
@@ -400,4 +411,3 @@ void MainWindow::on_sum_clicked()
         ui->display->setText(result);
     m_startNewOperand = true;               //再按数字键时重新开始一条算式
 }
-

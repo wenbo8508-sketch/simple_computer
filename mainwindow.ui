@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>338</width>
-    <height>321</height>
+    <height>360</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>带键盘事件的计算器</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -352,6 +352,19 @@
        </widget>
       </item>
      </layout>
+    </item>
+    <item>
+     <widget class="QLabel" name="hintLabel">
+      <property name="text">
+       <string>键盘：0-9 . + - * / = %  Enter 计算  Backspace 退格  Delete 清除输入  Esc 全部清除  x 乘  ^ 平方  r 开方</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignCenter</set>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>

@@ -21,22 +21,8 @@ public:
     ~MainWindow() override;
 
 protected:
-    //键盘事件：翻译成按钮后复用鼠标点击的同一套槽函数
+    //键盘事件：把按键翻译成按钮对象名，复用鼠标点击的同一套槽函数
     void keyPressEvent(QKeyEvent *event) override;
-    QString operand;
-    QString opcode;
-    QStack<QString> operands;
-    QStack<QString> opcodes;
-
-    QString calculation(bool *ok=NULL);
-
-    //把 double 结果格式化成显示文本（15 位有效数字）
-    static QString fromNumber(double value);
-    //把按钮上显示的 × ÷ 1/X X^2 翻译成代码内部使用的运算符符号
-    static QString operatorToken(const QString &buttonText);
-
-    //显示错误信息并进入错误状态
-    void showError(const QString &message);
 
 private slots:
     void btnNum_clicked();
@@ -57,7 +43,18 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    bool m_startNewOperand = false;     //按完 "=" 后下一次输入数字要重新开始算式
-    bool m_hasError = false;            //除数为 0、开方负数、结果溢出时进入错误状态
+
+    //计算器的内部状态，全部收进 private，外部只能靠按键驱动（原来这些是 public 的）
+    QString operand;                //当前正在输入的操作数
+    QString opcode;                 //当前按下的运算符
+    QStack<QString> operands;       //已经入栈的操作数
+    QStack<QString> opcodes;        //已经入栈的运算符
+    bool m_startNewOperand = false; //按完 "=" 后下一次输入数字要重新开始算式
+    bool m_hasError = false;        //除数为 0、开方负数、结果溢出时进入错误状态
+
+    QString calculation(bool *ok = nullptr);      //取出栈顶两个操作数做一次二元运算
+    static QString fromNumber(double value);      //结果转显示文本（15 位有效数字）
+    static QString operatorToken(const QString &buttonText);  //× ÷ 1/X X^2 → * / 1/x x^2
+    void showError(const QString &message);       //显示"错误"并进入错误状态
 };
 #endif // MAINWINDOW_H

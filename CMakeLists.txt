@@ -17,6 +17,7 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+        resources.qrc
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -84,6 +85,7 @@ if(BUILD_TESTS)
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+        resources.qrc
     )
 
     #测试代码在 tests/ 目录里，需要能找到工程根目录的 mainwindow.h

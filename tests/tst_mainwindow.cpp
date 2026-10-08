@@ -75,6 +75,8 @@ private slots:
     void keyboard_function_keys();
     void keyboard_escape_clears_all();
     void keyboard_recovers_from_error();
+    void window_title_and_appearance();
+    void display_widget_cannot_steal_keys();
 };
 
 void TestCalculator::digits_append()
@@ -309,6 +311,21 @@ void TestCalculator::keyboard_recovers_from_error()
 
     QTest::keyClicks(window, "6+1=");
     QCOMPARE(display(), QStringLiteral("7"));
+}
+
+void TestCalculator::window_title_and_appearance()
+{
+    QCOMPARE(window->windowTitle(), QStringLiteral("带键盘事件的计算器"));
+    QVERIFY2(!window->styleSheet().isEmpty(), "样式表资源 :/style/style.qss 没有加载成功");
+    QVERIFY(window->findChild<QLabel *>("hintLabel") != nullptr);   //键盘提示标签
+}
+
+void TestCalculator::display_widget_cannot_steal_keys()
+{
+    QLineEdit *disp = window->findChild<QLineEdit *>("display");
+    QVERIFY(disp->isReadOnly());
+    QCOMPARE(disp->focusPolicy(), Qt::NoFocus);                     //显示框不能抢键盘焦点
+    QCOMPARE(window->focusPolicy(), Qt::StrongFocus);               //主窗口能接收键盘事件
 }
 
 QTEST_MAIN(TestCalculator)
