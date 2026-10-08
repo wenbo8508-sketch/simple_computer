@@ -35,38 +35,71 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+//二元运算：从操作数栈里取出栈顶的两个数，配合最近按下的运算符求值。
+//关键改动：算完的结果必须重新压回 operands，否则像 "5+3-2=" 这样的连续运算，
+//第二次求值时栈里已经没有操作数可用，只能返回 0（原程序最终显示 0 就是这个原因）。
 QString MainWindow::calculation(bool *ok)
 {
-    double result = 0;
-    if (operands.size() == 2 && opcodes.size() > 0 ) {
-        //取操作数
-        double operand1 = operands.front().toDouble();
-        operands.pop_front();
-        double operand2 = operands.front().toDouble();
-        operands.pop_front();
+    if (ok)
+        *ok = true;
 
-        //取操作符
-        QString op = opcodes.front();
-        opcodes.pop_front();
-
-        if (op == "+") {
-            result = operand1 + operand2;
-        } else if (op == "-") {
-            result = operand1 - operand2;
-        } else if (op == "*") {
-            result = operand1 * operand2;
-        } else if (op == "/") {
-            result = operand1 / operand2;
-        }
-
-
-        ui->statusbar->showMessage(QString("calcuation is in progress: operands is %1, opcode is %2")
-                                       .arg(operands.size()).arg(opcodes.size()));
-    } else {
+    //操作数不足两个时不做二元运算，直接把当前值原样返回。
+    //原实现在这里返回 QString::number(0)，于是 "5+" 之后显示被覆盖成 "0"，
+    //"5=" 这种没有运算符的输入也会变成 0。
+    if (operands.size() < 2 || opcodes.isEmpty()) {
         ui->statusbar->showMessage(QString("operands is %1, opcode is %2")
                                        .arg(operands.size()).arg(opcodes.size()));
+        if (!operand.isEmpty())
+            return operand;
+        return operands.isEmpty() ? QString("0") : operands.top();
     }
-    return QString::number(result);
+
+    double operand2 = operands.pop().toDouble();   //栈顶是后输入的操作数
+    double operand1 = operands.pop().toDouble();
+    QString op = opcodes.pop();                    //取最近按下的运算符
+
+    double result = 0;
+    if (op == "+") {
+        result = operand1 + operand2;
+    } else if (op == "-") {
+        result = operand1 - operand2;
+    } else if (op == "*") {
+        result = operand1 * operand2;
+    } else if (op == "/") {
+        result = operand1 / operand2;
+    }
+
+    QString text = fromNumber(result);
+    operands.push_back(text);                      //结果回栈，可以继续参与后面的运算
+
+    ui->statusbar->showMessage(QString("calculation is in progress: operands is %1, opcode is %2")
+                                   .arg(operands.size()).arg(opcodes.size()));
+    return text;
+}
+
+//把 double 结果格式化成显示文本。QString::number() 默认只有 6 位有效数字，
+//123456789 × 9 会被显示成 1.11111e+09，这里提高到 15 位，并把 "-0" 规范成 "0"。
+QString MainWindow::fromNumber(double value)
+{
+    QString text = QString::number(value, 'g', 15);
+    if (text == "-0")
+        text = "0";
+    return text;
+}
+
+//界面上的按钮文本和代码里比较的符号并不一致：× ÷ 1/X X^2 对 * / 1/x x^2，
+//原来直接用按钮文本去比较，导致乘法、平方、倒数按了没反应，这里统一做一次翻译。
+QString MainWindow::operatorToken(const QString &buttonText)
+{
+    if (buttonText == "×")
+        return "*";
+    if (buttonText == "÷")
+        return "/";
+    if (buttonText == "1/X")
+        return "1/x";
+    if (buttonText == "X^2")
+        return "x^2";
+    return buttonText;
 }
 
 //数字键统一响应函数：把被按下按钮上的数字追加到当前操作数 operand 后面
@@ -77,6 +110,13 @@ void MainWindow::btnNum_clicked()
     QPushButton *btn = qobject_cast<QPushButton *>(sender());
     if (btn == nullptr)
         return;
+
+    if (m_startNewOperand) {            //按完 "=" 之后重新输入数字，开始一条新算式
+        operands.clear();
+        opcodes.clear();
+        operand.clear();
+        m_startNewOperand = false;
+    }
 
     if (operand == "0")                 //去掉多余的前导 0，避免出现 "012"
         operand.clear();
@@ -118,18 +158,26 @@ void MainWindow::on_C_clicked()
 
 void MainWindow::binaryOperatorClicked()
 {
-    ui->statusbar->showMessage("last operand "+ operand);
-    QString opcode = qobject_cast<QPushButton *>(sender())->text();
-    if (operand != "") {
-        operands.push_back(operand);
-        operand = "";
+    QString opcode = operatorToken(qobject_cast<QPushButton *>(sender())->text());
+    ui->statusbar->showMessage("last operand " + operand);
 
+    if (!operand.isEmpty()) {
+        operands.push_back(operand);      //当前输入的数字作为左操作数入栈
+        operand.clear();
+
+        //如果栈里已经有一条待算的式子，先算出中间结果显示出来（连续运算）
+        ui->display->setText(calculation());
+        opcodes.push_back(opcode);
+    } else if (!opcodes.isEmpty()) {
+        //连着按运算符时只保留最后一个，例如 "5+*" 应该等价于 "5*"
+        opcodes.pop();
+        opcodes.push_back(opcode);
+        if (!operands.isEmpty())
+            ui->display->setText(operands.top());
+    } else if (!operands.isEmpty()) {
+        //按完 "=" 之后接着按运算符，用刚算出的结果继续往下算
         opcodes.push_back(opcode);
     }
-
-    QString result=calculation();
-    ui->display->setText(result);
-
 }
 
 void MainWindow::btnUnaryoperatorClicked()
@@ -157,13 +205,17 @@ void MainWindow::btnUnaryoperatorClicked()
 
 void MainWindow::on_sum_clicked()
 {
-
-    if (operand != "") {
+    if (!operand.isEmpty()) {
         operands.push_back(operand);
-        operand = "";
+        operand.clear();
     }
 
-    QString result=calculation();
-    ui->display->setText(result);
+    //只有运算符没有右操作数时（"5+="），把左操作数当右操作数补上，
+    //结果和 Windows 计算器一致：5+ = 得到 10
+    if (operands.size() == opcodes.size() && !operands.isEmpty())
+        operands.push_back(operands.top());
+
+    ui->display->setText(calculation());
+    m_startNewOperand = true;             //再按数字键时重新开始一条算式
 }
 
