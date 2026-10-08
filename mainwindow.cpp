@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
-#include <math.h>
+#include <cmath>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -69,7 +69,16 @@ QString MainWindow::calculation(bool *ok)
     } else if (op == "*") {
         result = operand1 * operand2;
     } else if (op == "/") {
+        if (qFuzzyIsNull(operand2)) {       //除数为 0，原来会显示 inf
+            showError(QStringLiteral("除数不能为 0"));
+            return QStringLiteral("错误");
+        }
         result = operand1 / operand2;
+    }
+
+    if (!std::isfinite(result)) {           //结果溢出或变成 NaN
+        showError(QStringLiteral("数值溢出"));
+        return QStringLiteral("错误");
     }
 
     QString text = fromNumber(result);
@@ -82,6 +91,15 @@ QString MainWindow::calculation(bool *ok)
 
 //把 double 结果格式化成显示文本。QString::number() 默认只有 6 位有效数字，
 //123456789 × 9 会被显示成 1.11111e+09，这里提高到 15 位，并把 "-0" 规范成 "0"。
+//统一处理出错：显示区写"错误"，具体原因放到状态栏，并进入错误状态。
+//在用户按 C / CE / 数字 / 小数点之前，其它按键都不起作用，避免在错误结果上继续算。
+void MainWindow::showError(const QString &message)
+{
+    m_hasError = true;
+    m_startNewOperand = true;
+    ui->display->setText(QStringLiteral("错误"));
+    ui->statusbar->showMessage(message);
+}
 QString MainWindow::fromNumber(double value)
 {
     QString text = QString::number(value, 'g', 15);
@@ -106,6 +124,7 @@ QString MainWindow::operatorToken(const QString &buttonText)
 }
 
 //数字键统一响应函数：把被按下按钮上的数字追加到当前操作数 operand 后面
+//数字键统一响应函数：把被按下按钮上的数字追加到当前操作数 operand 后面
 void MainWindow::btnNum_clicked()
 {
     //原实现读取的是 ui->display->text()，拼出来的其实是上一次的显示内容，
@@ -114,19 +133,21 @@ void MainWindow::btnNum_clicked()
     if (btn == nullptr)
         return;
 
-    if (m_startNewOperand) {            //按完 "=" 之后重新输入数字，开始一条新算式
+    m_hasError = false;                     //按数字就能恢复，可以重新输入
+
+    if (m_startNewOperand) {                //按完 "=" 之后重新输入数字，开始一条新算式
         operands.clear();
         opcodes.clear();
         operand.clear();
         m_startNewOperand = false;
     }
 
-    if (operand == "0")                 //去掉多余的前导 0，避免出现 "012"
+    if (operand == "0")                     //去掉多余的前导 0，避免出现 "012"
         operand.clear();
 
     operand += btn->text();
 
-    if (operand.length() > 15)          //限制输入长度，防止显示区被撑爆
+    if (operand.length() > 15)              //限制输入长度，防止显示区被撑爆
         operand.chop(operand.length() - 15);
 
     ui->display->setText(operand);
@@ -134,13 +155,22 @@ void MainWindow::btnNum_clicked()
 
 void MainWindow::on_point_clicked()
 {
-    //原实现中的局部变量 QString operand 遮蔽了同名成员变量，
+    m_hasError = false;
+
+    if (m_startNewOperand) {                //按完 "=" 之后重新输入，开始一条新算式
+        operands.clear();
+        opcodes.clear();
+        operand.clear();
+        m_startNewOperand = false;
+    }
+
+    if (operand.isEmpty())                  //直接按小数点时补出 "0."
+        operand = QStringLiteral("0");
+
+    //原实现里的局部变量 QString operand 遮蔽了同名成员变量，
     //导致小数点只写进 display，成员 operand 一直是空的
     if (!operand.contains("."))
         operand += qobject_cast<QPushButton *>(sender())->text();
-
-    if (operand == ".")          //一开始就按小数点时补成 "0."
-        operand = "0.";
 
     ui->display->setText(operand);
 }
@@ -148,28 +178,49 @@ void MainWindow::on_point_clicked()
 
 void MainWindow::on_del_clicked()
 {
+    if (m_hasError) {                       //出错后按退格，直接回到可输入状态
+        on_C_clicked();
+        return;
+    }
+
+    //退格只删除当前正在输入的这一项，不影响已经入栈的操作数和运算符
     operand = operand.left(operand.length() - 1);
-    ui->display->setText(operand);
+    m_startNewOperand = false;
+
+    //原来可以一直删成空字符串，显示区一片空白；这里删空后回落到 "0"
+    ui->display->setText(operand.isEmpty() ? QStringLiteral("0") : operand);
 }
 
 
+//C（clear all）：整条算式全部清空
 void MainWindow::on_C_clicked()
 {
     operand.clear();
+    operands.clear();                       //原来只清了 operand，栈里的操作数和运算符还留着，
+    opcodes.clear();                        //于是 "1+2 C 3=" 会算出 4，现在一起清掉
+    m_startNewOperand = false;
+    m_hasError = false;
     ui->display->setText(operand);
+    ui->statusbar->showMessage("cleared");
 }
 
 void MainWindow::binaryOperatorClicked()
 {
+    if (m_hasError)                         //错误状态下先按运算符没有意义，直接忽略
+        return;
+
     QString opcode = operatorToken(qobject_cast<QPushButton *>(sender())->text());
     ui->statusbar->showMessage("last operand " + operand);
 
     if (!operand.isEmpty()) {
-        operands.push_back(operand);      //当前输入的数字作为左操作数入栈
+        operands.push_back(operand);        //当前输入的数字作为左操作数入栈
         operand.clear();
 
         //如果栈里已经有一条待算的式子，先算出中间结果显示出来（连续运算）
         ui->display->setText(calculation());
+        if (m_hasError)
+            return;
+
         opcodes.push_back(opcode);
     } else if (!opcodes.isEmpty()) {
         //连着按运算符时只保留最后一个，例如 "5+*" 应该等价于 "5*"
@@ -186,6 +237,9 @@ void MainWindow::binaryOperatorClicked()
 //一元运算：±、%、1/X、X^2、√ 都只作用在当前显示的数字上
 void MainWindow::btnUnaryoperatorClicked()
 {
+    if (m_hasError)
+        return;
+
     QPushButton *btn = qobject_cast<QPushButton *>(sender());
     if (btn == nullptr)
         return;
@@ -203,11 +257,24 @@ void MainWindow::btnUnaryoperatorClicked()
     } else if (op == "%") {
         result /= 100.0;
     } else if (op == "1/x") {
+        if (qFuzzyIsNull(result)) {   //1/0
+            showError(QStringLiteral("除数不能为 0"));
+            return;
+        }
         result = 1 / result;
     } else if (op == "x^2") {
         result *= result;
     } else if (op == "√") {
+        if (result < 0) {             //负数不能开平方
+            showError(QStringLiteral("负数不能开平方"));
+            return;
+        }
         result = sqrt(result);
+    }
+
+    if (!std::isfinite(result)) {
+        showError(QStringLiteral("数值溢出"));
+        return;
     }
 
     //运算结果继续作为当前操作数，这样 "√9 + 1 =" 还能接着算
@@ -227,6 +294,9 @@ void MainWindow::on_CE_clicked()
 
 void MainWindow::on_sum_clicked()
 {
+    if (m_hasError)
+        return;
+
     if (!operand.isEmpty()) {
         operands.push_back(operand);
         operand.clear();
@@ -237,7 +307,9 @@ void MainWindow::on_sum_clicked()
     if (operands.size() == opcodes.size() && !operands.isEmpty())
         operands.push_back(operands.top());
 
-    ui->display->setText(calculation());
-    m_startNewOperand = true;             //再按数字键时重新开始一条算式
+    QString result = calculation();
+    if (!m_hasError)
+        ui->display->setText(result);
+    m_startNewOperand = true;               //再按数字键时重新开始一条算式
 }
 

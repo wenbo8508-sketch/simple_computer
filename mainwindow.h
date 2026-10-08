@@ -30,6 +30,9 @@ public:
     //把按钮上显示的 × ÷ 1/X X^2 翻译成代码内部使用的运算符符号
     static QString operatorToken(const QString &buttonText);
 
+    //显示错误信息并进入错误状态
+    void showError(const QString &message);
+
 private slots:
     void btnNum_clicked();
 
@@ -50,5 +53,6 @@ private slots:
 private:
     Ui::MainWindow *ui;
     bool m_startNewOperand = false;     //按完 "=" 后下一次输入数字要重新开始算式
+    bool m_hasError = false;            //除数为 0、开方负数、结果溢出时进入错误状态
 };
 #endif // MAINWINDOW_H
