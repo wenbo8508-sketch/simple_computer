@@ -1,12 +1,26 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 #include <cmath>
+#include <QKeyEvent>
+#include <QPushButton>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    //------ 键盘事件的前提设置 ------
+    //显示框改成只读：否则它会把键盘输入的字符直接吃掉，窗口收不到按键
+    ui->display->setReadOnly(true);
+    ui->display->setFocusPolicy(Qt::NoFocus);    //显示框不参与焦点竞争，键盘事件才能落到主窗口
+    //QMainWindow 默认不接收键盘焦点，要显式打开
+    setFocusPolicy(Qt::StrongFocus);
+    //按钮一律不抢焦点，否则鼠标点过一次之后，那个按钮会截走后续的所有按键
+    const QList<QPushButton *> buttons = findChildren<QPushButton *>();
+    for (QPushButton *btn : buttons)
+        btn->setFocusPolicy(Qt::NoFocus);
+    setFocus();                                   //程序启动后焦点就在主窗口上，可以直接用键盘输入
 
     connect(ui->num0, SIGNAL(clicked()), this, SLOT(btnNum_clicked()));
     connect(ui->num1, SIGNAL(clicked()), this, SLOT(btnNum_clicked()));
@@ -36,6 +50,80 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+//------ 键盘事件处理 ------
+//把键盘按键翻译成一个按钮对象名，然后调用该按钮的 click()，
+//这样键盘和鼠标走的是完全相同的槽函数路径（sender() 仍然指向那个按钮），
+//不需要把计算逻辑重写一遍，也不会出现两种输入方式结果不一致的问题。
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+    //带 Ctrl / Alt 的组合键（Ctrl+C、Alt+F4 等）交回默认处理
+    if (event->modifiers().testFlag(Qt::ControlModifier)
+        || event->modifiers().testFlag(Qt::AltModifier)) {
+        QMainWindow::keyPressEvent(event);
+        return;
+    }
+
+    QString buttonName;
+    const QString text = event->text();     //已经考虑了 Shift 等修饰键的字符
+
+    if (!text.isEmpty()) {
+        const QChar ch = text.at(0).unicode();
+        if (ch.isDigit())
+            buttonName = QStringLiteral("num%1").arg(ch.digitValue());
+        else if (ch == QLatin1Char('.') || ch == QLatin1Char(','))
+            buttonName = QStringLiteral("point");
+        else if (ch == QLatin1Char('+'))
+            buttonName = QStringLiteral("addition");
+        else if (ch == QLatin1Char('-'))
+            buttonName = QStringLiteral("subtraction");
+        else if (ch == QLatin1Char('*') || ch == QLatin1Char('x') || ch == QLatin1Char('X')
+                 || ch == QChar(0x00D7))            //×
+            buttonName = QStringLiteral("multiple");
+        else if (ch == QLatin1Char('/') || ch == QChar(0x00F7))   //÷
+            buttonName = QStringLiteral("divite");
+        else if (ch == QLatin1Char('='))
+            buttonName = QStringLiteral("sum");
+        else if (ch == QLatin1Char('%'))
+            buttonName = QStringLiteral("present");
+        else if (ch == QChar(0x00B1))               //±
+            buttonName = QStringLiteral("zhengfu");
+        else if (ch == QLatin1Char('r') || ch == QLatin1Char('R'))
+            buttonName = QStringLiteral("root");    //R 键开平方
+        else if (ch == QLatin1Char('^'))
+            buttonName = QStringLiteral("square");  //^ 键求平方
+    }
+
+    //功能键没有可打印字符，只能按 key 判断
+    switch (event->key()) {
+    case Qt::Key_Return:
+    case Qt::Key_Enter:
+        buttonName = QStringLiteral("sum");
+        break;
+    case Qt::Key_Backspace:
+        buttonName = QStringLiteral("del");
+        break;
+    case Qt::Key_Delete:
+        buttonName = QStringLiteral("CE");
+        break;
+    case Qt::Key_Escape:
+        buttonName = QStringLiteral("C");
+        break;
+    default:
+        break;
+    }
+
+    if (buttonName.isEmpty()) {                     //没映射到的按键不能把事件吞掉
+        QMainWindow::keyPressEvent(event);
+        return;
+    }
+
+    QPushButton *btn = findChild<QPushButton *>(buttonName);
+    if (btn)
+        btn->click();                               //复用按钮已有的处理逻辑
+    else
+        event->ignore();
 }
 
 //二元运算：从操作数栈里取出栈顶的两个数，配合最近按下的运算符求值。

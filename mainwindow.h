@@ -9,6 +9,7 @@ QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
 }
+class QKeyEvent;
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
@@ -18,6 +19,10 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
+
+protected:
+    //键盘事件：翻译成按钮后复用鼠标点击的同一套槽函数
+    void keyPressEvent(QKeyEvent *event) override;
     QString operand;
     QString opcode;
     QStack<QString> operands;

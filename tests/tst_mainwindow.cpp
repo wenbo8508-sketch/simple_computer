@@ -70,6 +70,11 @@ private slots:
     void divide_by_zero_shows_error();
     void error_state_blocks_operators();
     void sqrt_of_negative_shows_error();
+    void keyboard_basic_expression();
+    void keyboard_enter_and_x_as_multiply();
+    void keyboard_function_keys();
+    void keyboard_escape_clears_all();
+    void keyboard_recovers_from_error();
 };
 
 void TestCalculator::digits_append()
@@ -248,6 +253,62 @@ void TestCalculator::sqrt_of_negative_shows_error()
     press({"CE"});
     press({"num4", "root"});
     QCOMPARE(display(), QStringLiteral("2"));             //CE 之后还能接着算 √4 = 2
+}
+
+//------ 以下用例验证键盘事件：结果要和鼠标点击完全一致 ------
+
+void TestCalculator::keyboard_basic_expression()
+{
+    QTest::keyClicks(window, "5+3=");
+    QCOMPARE(display(), QStringLiteral("8"));
+}
+
+void TestCalculator::keyboard_enter_and_x_as_multiply()
+{
+    QTest::keyClicks(window, "12x3");            //小写 x 当作乘号
+    QTest::keyClick(window, Qt::Key_Enter);      //回车等价于 "="
+    QCOMPARE(display(), QStringLiteral("36"));
+
+    QTest::keyClicks(window, "4*2");
+    QTest::keyClick(window, Qt::Key_Return);
+    QCOMPARE(display(), QStringLiteral("8"));    //按完 "=" 后输入数字自动开新算式
+}
+
+void TestCalculator::keyboard_function_keys()
+{
+    QTest::keyClicks(window, "123");
+    QTest::keyClick(window, Qt::Key_Backspace);  //退格等价于 ⌫
+    QCOMPARE(display(), QStringLiteral("12"));
+
+    QTest::keyClick(window, Qt::Key_Delete);     //Delete 等价于 CE，只清当前输入
+    QTest::keyClicks(window, "7+8");
+    QTest::keyClick(window, Qt::Key_Return);
+    QCOMPARE(display(), QStringLiteral("15"));
+
+    QTest::keyClicks(window, "9^");              //键盘上 ^ 求平方
+    QCOMPARE(display(), QStringLiteral("81"));
+
+    QTest::keyClicks(window, "c");               //c 不是映射按键，应该被忽略，不改变显示
+    QCOMPARE(display(), QStringLiteral("81"));
+}
+
+void TestCalculator::keyboard_escape_clears_all()
+{
+    QTest::keyClicks(window, "1+2");
+    QTest::keyClick(window, Qt::Key_Escape);     //Esc 等价于 C 全清
+    QCOMPARE(display(), QString());
+
+    QTest::keyClicks(window, "3+4=");
+    QCOMPARE(display(), QStringLiteral("7"));    //清屏后不留残留的运算符和操作数
+}
+
+void TestCalculator::keyboard_recovers_from_error()
+{
+    QTest::keyClicks(window, "5/0=");
+    QCOMPARE(display(), QStringLiteral("错误"));
+
+    QTest::keyClicks(window, "6+1=");
+    QCOMPARE(display(), QStringLiteral("7"));
 }
 
 QTEST_MAIN(TestCalculator)
