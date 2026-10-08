@@ -68,3 +68,34 @@ install(TARGETS simple_computor
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(simple_computor)
 endif()
+
+#------------------------------------------------------------
+# 自动化测试：用 QtTest 模拟按钮点击，检查计算器状态转移
+# 关闭方法：cmake -DBUILD_TESTS=OFF ..
+#------------------------------------------------------------
+option(BUILD_TESTS "Build unit tests" ON)
+
+if(BUILD_TESTS)
+    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Test)
+    enable_testing()
+
+    add_executable(tst_simple_computor
+        tests/tst_mainwindow.cpp
+        mainwindow.cpp
+        mainwindow.h
+        mainwindow.ui
+    )
+
+    #测试代码在 tests/ 目录里，需要能找到工程根目录的 mainwindow.h
+    target_include_directories(tst_simple_computor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+    target_link_libraries(tst_simple_computor PRIVATE
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Test
+    )
+
+    add_test(NAME simple_computor COMMAND tst_simple_computor)
+    set_tests_properties(simple_computor PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+    )
+endif()
