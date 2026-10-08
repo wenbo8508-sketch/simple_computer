@@ -188,8 +188,6 @@ QString MainWindow::calculation(bool *ok)
     return text;
 }
 
-//把 double 结果格式化成显示文本。QString::number() 默认只有 6 位有效数字，
-//123456789 × 9 会被显示成 1.11111e+09，这里提高到 15 位，并把 "-0" 规范成 "0"。
 //统一处理出错：显示区写"错误"，具体原因放到状态栏，并进入错误状态。
 //在用户按 C / CE / 数字 / 小数点之前，其它按键都不起作用，避免在错误结果上继续算。
 void MainWindow::showError(const QString &message)
@@ -199,6 +197,9 @@ void MainWindow::showError(const QString &message)
     ui->display->setText(QStringLiteral("错误"));
     ui->statusbar->showMessage(message);
 }
+
+//把 double 结果格式化成显示文本。QString::number() 默认只有 6 位有效数字，
+//123456789 × 9 会被显示成 1.11111e+09，这里提高到 15 位，并把 "-0" 规范成 "0"。
 QString MainWindow::fromNumber(double value)
 {
     QString text = QString::number(value, 'g', 15);
@@ -222,7 +223,6 @@ QString MainWindow::operatorToken(const QString &buttonText)
     return buttonText;
 }
 
-//数字键统一响应函数：把被按下按钮上的数字追加到当前操作数 operand 后面
 //数字键统一响应函数：把被按下按钮上的数字追加到当前操作数 operand 后面
 void MainWindow::btnNum_clicked()
 {
@@ -331,6 +331,11 @@ void MainWindow::binaryOperatorClicked()
         //按完 "=" 之后接着按运算符，用刚算出的结果继续往下算
         opcodes.push_back(opcode);
     }
+
+    //按完 "=" 之后 m_startNewOperand 仍然是 true，这里必须把它清掉：
+    //否则「结果 → 按运算符 → 输入数字」时，数字键会误以为在开一条新算式，
+    //把刚算出来的结果连同运算符一起清空（5 + 3 = + 2 = 只显示 2 就是这个原因）
+    m_startNewOperand = false;
 }
 
 //一元运算：±、%、1/X、X^2、√ 都只作用在当前显示的数字上

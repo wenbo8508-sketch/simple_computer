@@ -66,6 +66,7 @@ private slots:
     void consecutive_operators_keep_last();
     void equals_without_right_operand();
     void operator_after_equals_reuses_result();
+    void result_reused_when_typing_after_operator();
     void typing_after_equals_starts_new_expression();
     void divide_by_zero_shows_error();
     void error_state_blocks_operators();
@@ -75,6 +76,7 @@ private slots:
     void keyboard_function_keys();
     void keyboard_escape_clears_all();
     void keyboard_recovers_from_error();
+    void keyboard_result_reused_after_operator();
     void window_title_and_appearance();
     void display_widget_cannot_steal_keys();
 };
@@ -218,6 +220,18 @@ void TestCalculator::operator_after_equals_reuses_result()
     QCOMPARE(display(), QStringLiteral("16"));
 }
 
+void TestCalculator::result_reused_when_typing_after_operator()
+{
+    //回归用例：5 + 3 = + 2 = 应该等于 10，
+    //以前按完 "=" 再按运算符、接着输入数字时，刚算出的结果会被当成新算式清掉，只显示 2
+    press({"num5", "addition", "num3", "sum", "addition", "num2", "sum"});
+    QCOMPARE(display(), QStringLiteral("10"));
+
+    //继续用同一个结果往下算：+ 4 = 14
+    press({"addition", "num4", "sum"});
+    QCOMPARE(display(), QStringLiteral("14"));
+}
+
 void TestCalculator::typing_after_equals_starts_new_expression()
 {
     press({"num5", "addition", "num3", "sum", "num7", "addition", "num1", "sum"});
@@ -311,6 +325,17 @@ void TestCalculator::keyboard_recovers_from_error()
 
     QTest::keyClicks(window, "6+1=");
     QCOMPARE(display(), QStringLiteral("7"));
+}
+
+void TestCalculator::keyboard_result_reused_after_operator()
+{
+    //键盘方式的回归用例，结果要和鼠标完全一致
+    QTest::keyClicks(window, "5+3=+2=");
+    QCOMPARE(display(), QStringLiteral("10"));
+
+    QTest::keyClicks(window, "*3");
+    QTest::keyClick(window, Qt::Key_Return);
+    QCOMPARE(display(), QStringLiteral("30"));
 }
 
 void TestCalculator::window_title_and_appearance()
