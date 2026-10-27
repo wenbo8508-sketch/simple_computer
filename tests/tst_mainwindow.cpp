@@ -83,6 +83,14 @@ private slots:
     void keyboard_result_reused_after_operator();
     void window_title_and_appearance();
     void display_widget_cannot_steal_keys();
+
+    //边界与回归补充
+    void long_input_is_truncated();
+    void repeated_equals_keeps_last_result();
+    void backspace_after_equals_then_new_input();
+    void unary_root_then_binary_operator();
+    void point_after_equals_starts_new_number();
+    void keyboard_sqrt_then_add();
 };
 
 void TestCalculator::digits_append()
@@ -406,6 +414,66 @@ void TestCalculator::keyboard_result_reused_after_operator()
     QTest::keyClicks(window, "*3");
     QTest::keyClick(window, Qt::Key_Return);
     QCOMPARE(display(), QStringLiteral("30"));
+}
+
+void TestCalculator::long_input_is_truncated()
+{
+    //连按 20 个数字：只显示前 15 位，多余按键被丢弃，不能把显示区撑爆
+    QStringList keys;
+    for (int i = 0; i < 20; ++i)
+        keys << QStringLiteral("num1");
+    press(keys);
+    QCOMPARE(int(display().length()), 15);
+    QCOMPARE(display(), QStringLiteral("111111111111111"));
+
+    press({"addition", "num1", "sum"});
+    QCOMPARE(display(), QStringLiteral("111111111111112"));   //截断后还能正常参与运算
+}
+
+void TestCalculator::repeated_equals_keeps_last_result()
+{
+    //与 Windows 计算器的差异：按 "=" 不记忆上一条算式，重复按 "=" 结果保持不变
+    press({"num5", "addition", "num3", "sum", "sum", "sum"});
+    QCOMPARE(display(), QStringLiteral("8"));
+
+    press({"C", "num9", "subtraction", "num4", "sum", "sum"});
+    QCOMPARE(display(), QStringLiteral("5"));
+}
+
+void TestCalculator::backspace_after_equals_then_new_input()
+{
+    press({"num5", "addition", "num3", "sum"});
+    QCOMPARE(display(), QStringLiteral("8"));
+
+    press({"del"});                                 //结果是算出来的，退格只能把显示清零
+    QCOMPARE(display(), QStringLiteral("0"));
+
+    press({"num7", "addition", "num1", "sum"});
+    QCOMPARE(display(), QStringLiteral("8"));       //残留的栈顶不能影响新算式
+}
+
+void TestCalculator::unary_root_then_binary_operator()
+{
+    //一元运算的结果要能当作左操作数继续参与二元运算
+    press({"num9", "root", "addition", "num1", "sum"});             //sqrt(9) + 1
+    QCOMPARE(display(), QStringLiteral("4"));
+
+    press({"C", "num2", "square", "multiple", "num3", "sum"});      //2^2 x 3
+    QCOMPARE(display(), QStringLiteral("12"));
+}
+
+void TestCalculator::point_after_equals_starts_new_number()
+{
+    //按完 "=" 直接按小数点，应当重新起一个 0.x，而不是把结果接着拼上去
+    press({"num5", "addition", "num3", "sum", "point", "num5"});
+    QCOMPARE(display(), QStringLiteral("0.5"));
+}
+
+void TestCalculator::keyboard_sqrt_then_add()
+{
+    //键盘 r 开平方后继续用键盘算完，结果要和鼠标一致
+    QTest::keyClicks(window, "9r+1=");
+    QCOMPARE(display(), QStringLiteral("4"));
 }
 
 void TestCalculator::window_title_and_appearance()
