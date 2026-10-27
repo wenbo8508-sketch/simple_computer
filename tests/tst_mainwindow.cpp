@@ -72,6 +72,7 @@ private slots:
     void typing_after_equals_starts_new_expression();
     void divide_by_zero_shows_error();
     void error_state_blocks_operators();
+    void error_state_recovers_with_clear_entry();
     void sqrt_of_negative_shows_error();
     void keyboard_basic_expression();
     void keyboard_enter_and_x_as_multiply();
@@ -286,6 +287,28 @@ void TestCalculator::error_state_blocks_operators()
     QCOMPARE(display(), QString());                       //C 之后回到空白（placeholderText 显示 0）
     press({"num2", "addition", "num2", "sum"});
     QCOMPARE(display(), QStringLiteral("4"));             //清屏后可以正常使用
+}
+
+void TestCalculator::error_state_recovers_with_clear_entry()
+{
+    press({"num5", "divite", "num0", "sum"});
+    QCOMPARE(display(), QStringLiteral("错误"));
+
+    press({"CE"});                                      //CE 也能从错误状态恢复
+    QCOMPARE(display(), QString());
+
+    press({"num2", "addition", "num3", "sum"});
+    QCOMPARE(display(), QStringLiteral("5"));           //全清后不留残留的运算符
+
+    //非错误状态下 CE 依旧只清当前输入这一项
+    press({"num8", "addition", "num9", "CE", "sum"});
+    QCOMPARE(display(), QStringLiteral("16"));
+
+    QTest::keyClicks(window, "1/0=");                   //键盘触发错误同样能被 Delete(CE) 清掉
+    QCOMPARE(display(), QStringLiteral("错误"));
+    QTest::keyClick(window, Qt::Key_Delete);
+    press({"num4", "addition", "num4", "sum"});
+    QCOMPARE(display(), QStringLiteral("8"));
 }
 
 void TestCalculator::sqrt_of_negative_shows_error()

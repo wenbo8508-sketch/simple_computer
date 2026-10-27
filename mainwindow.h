@@ -50,7 +50,7 @@ private:
     QStack<QString> operands;       //已经入栈的操作数
     QStack<QString> opcodes;        //已经入栈的运算符
     bool m_startNewOperand = false; //按完 "=" 后下一次输入数字要重新开始算式
-    bool m_hasError = false;        //除数为 0、开方负数、结果溢出时进入错误状态
+    bool m_hasError = false;        //除数为 0、开方负数、溢出时进入错误状态，只有 C / CE / 退格 / 数字 / 小数点能恢复
 
     QString calculation();                      //取出栈顶两个操作数做一次二元运算，结果重新压回栈
     static QString fromNumber(double value);      //结果转显示文本（15 位有效数字）

@@ -391,9 +391,16 @@ void MainWindow::btnUnaryoperatorClicked()
 }
 
 //CE（clear entry）：只清掉当前正在输入的这一项，
-//之前已经入栈的操作数和运算符保持不变，这是它和 C 的区别
+//之前已经入栈的操作数和运算符保持不变，这是它和 C 的区别。
+//唯一的例外是错误状态：此时栈里残留的是导致出错的那条算式，继续保留没有任何意义，
+//所以 CE 和退格一样退化成 C，直接把状态恢复到可以重新输入。
 void MainWindow::on_CE_clicked()
 {
+    if (m_hasError) {                       //出错后按 CE，先回到干净状态
+        on_C_clicked();
+        return;
+    }
+
     operand.clear();
     ui->display->setText(operand);
 }
