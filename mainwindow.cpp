@@ -356,7 +356,13 @@ void MainWindow::btnUnaryoperatorClicked()
     if (op == "±") {                  //原来 ± 键虽然 connect 了，但 if 链里没有分支，按了没反应
         result = -result;
     } else if (op == "%") {
-        result /= 100.0;
+        //和 Windows 自带计算器保持一致：加减法时百分号取的是「左操作数的百分之几」，
+        //所以 100 + 10 % = 110；乘除法时百分号仍然只做除以 100，100 x 10 % = 10。
+        const QString pending = opcodes.isEmpty() ? QString() : opcodes.top();
+        if ((pending == "+" || pending == "-") && !operands.isEmpty())
+            result = operands.top().toDouble() * result / 100.0;
+        else
+            result /= 100.0;
     } else if (op == "1/x") {
         if (qFuzzyIsNull(result)) {   //1/0
             showError(QStringLiteral("除数不能为 0"));

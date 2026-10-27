@@ -60,6 +60,8 @@ private slots:
     void unary_root_and_square();
     void unary_reciprocal_percent_and_sign();
     void unary_after_equals();
+    void percent_relative_to_left_operand();
+    void keyboard_percent_after_plus();
     void clear_entry_keeps_expression();
     void clear_all_resets_everything();
     void backspace_edits_current_input();
@@ -176,6 +178,32 @@ void TestCalculator::unary_after_equals()
     //先算出结果，再对结果做一元运算
     press({"num3", "multiple", "num3", "sum", "root"});
     QCOMPARE(display(), QStringLiteral("3"));
+}
+
+void TestCalculator::percent_relative_to_left_operand()
+{
+    //加减法时 % 以左操作数为基准：100 + 10 % = 110
+    press({"num1", "num0", "num0", "addition", "num1", "num0", "present", "sum"});
+    QCOMPARE(display(), QStringLiteral("110"));
+
+    //100 - 10 % = 90
+    press({"C", "num1", "num0", "num0", "subtraction", "num1", "num0", "present", "sum"});
+    QCOMPARE(display(), QStringLiteral("90"));
+
+    //乘除法时 % 只做除以 100：100 x 10 % = 10
+    press({"C", "num1", "num0", "num0", "multiple", "num1", "num0", "present", "sum"});
+    QCOMPARE(display(), QStringLiteral("10"));
+
+    //没有运算符时维持原语义：5 % = 0.05
+    press({"C", "num5", "present", "sum"});
+    QCOMPARE(display(), QStringLiteral("0.05"));
+}
+
+void TestCalculator::keyboard_percent_after_plus()
+{
+    //键盘路径的结果要和鼠标完全一致
+    QTest::keyClicks(window, "100+10%=");
+    QCOMPARE(display(), QStringLiteral("110"));
 }
 
 void TestCalculator::clear_entry_keeps_expression()
