@@ -152,7 +152,7 @@ Totals: 43 passed, 0 failed, 0 skipped, 0 blacklisted
 
 ## 8. Git 提交历史（GitHub 迭代过程）
 
-仓库：**https://github.com/wenbo8508-sketch/simple_computer** （分支 `main`，共 20 次提交）
+仓库：**https://github.com/wenbo8508-sketch/simple_computer** （分支 `master`，共 21 次提交）
 提交按「一次提交只做一件事」拆分，可清晰看出 功能 → 测试 → 修复 → 重构 → 文档 的迭代过程：
 
 | # | 提交 | 目的 |
@@ -176,14 +176,14 @@ Totals: 43 passed, 0 failed, 0 skipped, 0 blacklisted
 | 17 | `4bc2708` | **修复**：错误状态下按 CE 不能恢复，与注释、退格行为自相矛盾，补回归用例 |
 | 18 | `ec74612` | **健壮性**：未知运算符安全兜底、`sender()` 判空、状态栏提示统一中文 |
 | 19 | `3b76763` | **测试**：补 6 组边界与回归用例（43 项断言全绿），把验收结论固化成断言 |
-| 20 | 本次提交 | **文档/工具**：新增实验要求验收对照、界面截图工具 `tools/shot.cpp` 与 8 张截图，修正 README 中的中文路径示例 |
+| 20 | `4705939` | **文档/工具**：新增实验要求验收对照、界面截图工具 `tools/shot.cpp` 与 8 张截图，修正 README 中的中文路径示例 |
+| 21 | 本次提交 | **文档**：使 README 与远端仓库一致（默认分支为 `master`、补齐第 20 次提交哈希、推送命令按实际操作写法） |
 
 本地推送到 GitHub：
 
 ```powershell
 git remote add origin https://github.com/wenbo8508-sketch/simple_computer.git
-git branch -M main
-git push -u origin main
+git push -u origin master   # 远端默认分支即首次推送的 master
 ```
 
 ## 9. 已知取舍
