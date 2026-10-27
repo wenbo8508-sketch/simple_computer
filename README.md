@@ -111,7 +111,7 @@ simple_computer/
 ### 方式二：命令行
 
 ```powershell
-cd D:\冷布丁的QT\simple_computer
+cd D:\QTwork\simple_computer
 cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH="C:/Qt/6.11.2/mingw_64" -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 .\build\simple_computor.exe
@@ -150,25 +150,40 @@ Totals: 43 passed, 0 failed, 0 skipped, 0 blacklisted
 - 所有按键圆角 6px + 1px 描边，`:hover` 提亮、`:pressed` 变灰，点击反馈明显；
 - 状态栏白底 + 顶部细线 + 中灰文字，`hintLabel` 用灰色小字，不抢视觉重点。
 
-## 8. Git 提交历史
+## 8. Git 提交历史（GitHub 迭代过程）
 
-```text
-f7b1ef7 初始提交：导入原始 simple_computer 工程
-6035bda 修复数字键与小数点无法正确输入的问题
-0f52e34 修复运算符匹配与连续运算错误
-2f74c31 补全 CE、±、百分号、倒数、平方、开方按键功能
-27452ea 补齐异常输入处理：除数为 0、开方负数、溢出、退格与全清
-af73ee8 增加 QtTest 自动化用例并接入 CMake/CTest
-306a9e0 增加键盘事件处理，键盘与鼠标复用同一套槽函数
-eaee68e 使用样式表美化界面，并整理窗口与成员访问权限
-17e6aec 修复算完结果后按运算符续算被清空的问题
-```
+仓库：**https://github.com/wenbo8508-sketch/simple_computer** （分支 `main`，共 20 次提交）
+提交按「一次提交只做一件事」拆分，可清晰看出 功能 → 测试 → 修复 → 重构 → 文档 的迭代过程：
 
-推送到 GitHub（需要本人账号，本地执行）：
+| # | 提交 | 目的 |
+| --- | --- | --- |
+| 1 | `f7b1ef7` | 初始提交：导入原始 simple_computer 工程 |
+| 2 | `6035bda` | 修复数字键与小数点无法正确输入的问题 |
+| 3 | `0f52e34` | 修复运算符匹配与连续运算错误 |
+| 4 | `2f74c31` | 补全 CE、±、百分号、倒数、平方、开方按键功能 |
+| 5 | `27452ea` | 补齐异常输入处理：除数为 0、开方负数、溢出、退格与全清 |
+| 6 | `af73ee8` | 增加 QtTest 自动化用例并接入 CMake/CTest |
+| 7 | `306a9e0` | 增加键盘事件处理，键盘与鼠标复用同一套槽函数 |
+| 8 | `eaee68e` | 使用样式表美化界面，并整理窗口与成员访问权限 |
+| 9 | `17e6aec` | 修复算完结果后按运算符续算被清空的问题 |
+| 10 | `55fde01` | 重构：精简 `calculation()` 接口并整理注释位置 |
+| 11 | `79202ea` | 样式：界面改为以白色为主的浅色主题（仿系统计算器） |
+| 12 | `63fc420` | 文档：新增 README 与调试修复记录 |
+| 13 | `a3938da` | 界面：窗口标题改为个人标识并精简键盘提示文字 |
+| 14 | `e0d0f8c` | 测试：同步窗口标题断言，33 项用例全部通过 |
+| 15 | `de407e8` | 构建：忽略命令行构建目录 `build-cli/`，工作区保持干净 |
+| 16 | `13a1156` | **功能**：百分号与系统计算器同语义（`100+10%=` 得 110），补 2 条用例 |
+| 17 | `4bc2708` | **修复**：错误状态下按 CE 不能恢复，与注释、退格行为自相矛盾，补回归用例 |
+| 18 | `ec74612` | **健壮性**：未知运算符安全兜底、`sender()` 判空、状态栏提示统一中文 |
+| 19 | `3b76763` | **测试**：补 6 组边界与回归用例（43 项断言全绿），把验收结论固化成断言 |
+| 20 | 本次提交 | **文档/工具**：新增实验要求验收对照、界面截图工具 `tools/shot.cpp` 与 8 张截图，修正 README 中的中文路径示例 |
+
+本地推送到 GitHub：
 
 ```powershell
-git remote add origin https://github.com/<你的用户名>/simple_computer.git
-git push -u origin master
+git remote add origin https://github.com/wenbo8508-sketch/simple_computer.git
+git branch -M main
+git push -u origin main
 ```
 
 ## 9. 已知取舍

@@ -101,3 +101,22 @@ if(BUILD_TESTS)
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
     )
 endif()
+
+#------------------------------------------------------------
+# 界面截图工具：offscreen 渲染典型输入状态，输出 PNG 到 docs/screenshots
+# 默认关闭，需要时：cmake -DBUILD_SHOTS=ON .. && cmake --build .. --target shots
+#------------------------------------------------------------
+option(BUILD_SHOTS "Build the offscreen screenshot tool (tools/shot.cpp)" OFF)
+
+if(BUILD_SHOTS)
+    add_executable(shots
+        tools/shot.cpp
+        mainwindow.cpp
+        mainwindow.h
+        mainwindow.ui
+        resources.qrc
+    )
+    target_include_directories(shots PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(shots PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+    set_target_properties(shots PROPERTIES WIN32_EXECUTABLE FALSE)
+endif()
