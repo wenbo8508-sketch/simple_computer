@@ -4,3 +4,4 @@ CMakeLists.txt.user*
 *.user
 *.orig
 qt_install_manifest.txt
+build-cli/
