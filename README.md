@@ -37,7 +37,7 @@ simple_computer/
 - 显示区 `display`（`QLineEdit`）：只读、右对齐、`placeholderText` 为 `0`，
   放在网格第 0 行并跨 4 列（`colspan="4"`），所以显示区宽度始终和按键区一致。
 - 提示 `hintLabel`（`QLabel`）：说明可用的键盘按键。
-- 状态栏 `statusbar` 打印操作数栈/运算符栈的实时状态，方便调试和课堂演示。
+- 状态栏 `statusbar` 用中文打印操作数栈/运算符栈的实时状态，出错时也在这里给出原因，方便调试和课堂演示。
 - 模板自带的空 `menubar` 没有菜单项，构造函数里 `hide()` 隐藏。
 
 | 类别 | 控件对象名 | 按钮文本 |

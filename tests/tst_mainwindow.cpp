@@ -73,6 +73,7 @@ private slots:
     void divide_by_zero_shows_error();
     void error_state_blocks_operators();
     void error_state_recovers_with_clear_entry();
+    void status_bar_messages_are_chinese();
     void sqrt_of_negative_shows_error();
     void keyboard_basic_expression();
     void keyboard_enter_and_x_as_multiply();
@@ -265,6 +266,24 @@ void TestCalculator::typing_after_equals_starts_new_expression()
 {
     press({"num5", "addition", "num3", "sum", "num7", "addition", "num1", "sum"});
     QCOMPARE(display(), QStringLiteral("8"));
+}
+
+void TestCalculator::status_bar_messages_are_chinese()
+{
+    //状态栏是给课堂演示和调试用的，提示文案统一成中文，并且要能反映栈的真实变化
+    press({"num5", "addition"});
+    QVERIFY2(status().contains(QStringLiteral("操作数栈 1 项，运算符栈 0 项，不足以求值")),
+             qPrintable(status()));
+
+    press({"num3", "sum"});
+    QVERIFY2(status().contains(QStringLiteral("求值完成：操作数栈 1 项，运算符栈 0 项")),
+             qPrintable(status()));
+
+    press({"num5", "divite", "num0", "sum"});
+    QVERIFY2(status().contains(QStringLiteral("除数不能为 0")), qPrintable(status()));
+
+    press({"C"});
+    QVERIFY2(status().contains(QStringLiteral("已全部清除")), qPrintable(status()));
 }
 
 void TestCalculator::divide_by_zero_shows_error()

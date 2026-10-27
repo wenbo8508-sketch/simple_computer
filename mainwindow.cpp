@@ -146,18 +146,21 @@ QString MainWindow::calculation()
     //原实现在这里返回 QString::number(0)，于是 "5+" 之后显示被覆盖成 "0"，
     //"5=" 这种没有运算符的输入也会变成 0。
     if (operands.size() < 2 || opcodes.isEmpty()) {
-        ui->statusbar->showMessage(QString("operands is %1, opcode is %2")
+        ui->statusbar->showMessage(QStringLiteral("操作数栈 %1 项，运算符栈 %2 项，不足以求值")
                                        .arg(operands.size()).arg(opcodes.size()));
         if (!operand.isEmpty())
             return operand;
         return operands.isEmpty() ? QString("0") : operands.top();
     }
 
-    double operand2 = operands.pop().toDouble();   //栈顶是后输入的操作数
-    double operand1 = operands.pop().toDouble();
-    QString op = opcodes.pop();                    //取最近按下的运算符
+    const QString text2 = operands.pop();          //栈顶是后输入的操作数
+    const QString text1 = operands.pop();
+    const QString op = opcodes.pop();              //取最近按下的运算符
+    double operand2 = text2.toDouble();
+    double operand1 = text1.toDouble();
 
     double result = 0;
+    bool known = true;                             //运算符是否在已知之列
     if (op == "+") {
         result = operand1 + operand2;
     } else if (op == "-") {
@@ -170,6 +173,19 @@ QString MainWindow::calculation()
             return QStringLiteral("错误");
         }
         result = operand1 / operand2;
+    } else {
+        //opcodes 里只可能出现 + - * / 四种，正常按键走不到这一支。
+        //原来的写法遇到未知运算符时 result 保持 0 并照样压回栈，等于把整条算式悄悄改成 0，
+        //这里改成把刚弹出的内容原样放回，再明确报错，不污染内部状态。
+        known = false;
+    }
+
+    if (!known) {
+        operands.push_back(text1);
+        operands.push_back(text2);
+        opcodes.push_back(op);
+        showError(QStringLiteral("未知的运算符"));
+        return QStringLiteral("错误");
     }
 
     if (!std::isfinite(result)) {           //结果溢出或变成 NaN
@@ -180,7 +196,7 @@ QString MainWindow::calculation()
     QString text = fromNumber(result);
     operands.push_back(text);                      //结果回栈，可以继续参与后面的运算
 
-    ui->statusbar->showMessage(QString("calculation is in progress: operands is %1, opcode is %2")
+    ui->statusbar->showMessage(QStringLiteral("求值完成：操作数栈 %1 项，运算符栈 %2 项")
                                    .arg(operands.size()).arg(opcodes.size()));
     return text;
 }
@@ -251,6 +267,10 @@ void MainWindow::btnNum_clicked()
 
 void MainWindow::on_point_clicked()
 {
+    QPushButton *btn = qobject_cast<QPushButton *>(sender());
+    if (btn == nullptr)                     //同上，防止被其它对象的信号误触发后崩在空指针上
+        return;
+
     m_hasError = false;
 
     if (m_startNewOperand) {                //按完 "=" 之后重新输入，开始一条新算式
@@ -266,7 +286,7 @@ void MainWindow::on_point_clicked()
     //原实现里的局部变量 QString operand 遮蔽了同名成员变量，
     //导致小数点只写进 display，成员 operand 一直是空的
     if (!operand.contains("."))
-        operand += qobject_cast<QPushButton *>(sender())->text();
+        operand += btn->text();
 
     ui->display->setText(operand);
 }
@@ -297,7 +317,7 @@ void MainWindow::on_C_clicked()
     m_startNewOperand = false;
     m_hasError = false;
     ui->display->setText(operand);
-    ui->statusbar->showMessage("cleared");
+    ui->statusbar->showMessage(QStringLiteral("已全部清除"));
 }
 
 void MainWindow::binaryOperatorClicked()
@@ -305,8 +325,12 @@ void MainWindow::binaryOperatorClicked()
     if (m_hasError)                         //错误状态下先按运算符没有意义，直接忽略
         return;
 
-    opcode = operatorToken(qobject_cast<QPushButton *>(sender())->text());   //记录本次按下的运算符
-    ui->statusbar->showMessage("last operand " + operand);
+    QPushButton *btn = qobject_cast<QPushButton *>(sender());
+    if (btn == nullptr)                     //和数字键一样，只接受按钮发来的信号
+        return;
+
+    opcode = operatorToken(btn->text());    //记录本次按下的运算符
+    ui->statusbar->showMessage(QStringLiteral("已入栈的操作数：%1").arg(operand));
 
     if (!operand.isEmpty()) {
         operands.push_back(operand);        //当前输入的数字作为左操作数入栈
