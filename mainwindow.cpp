@@ -23,10 +23,10 @@ MainWindow::MainWindow(QWidget *parent)
         btn->setFocusPolicy(Qt::NoFocus);
     setFocus();                                   //程序启动后焦点就在主窗口上，可以直接用键盘输入
 
-    setWindowTitle(QStringLiteral("带键盘事件的计算器"));
+    setWindowTitle(QStringLiteral("宋文博的计算器"));
     ui->menubar->hide();                          //模板自带的空菜单栏没有菜单项，隐藏掉
 
-    //样式表美化界面：深色计算器屏幕 + 数字键/运算符键/功能键分色
+    //样式表美化界面：浅色（白底深字）计算器屏幕 + 数字键/运算符键/功能键分色
     QFile qss(QStringLiteral(":/style/style.qss"));
     if (qss.open(QIODevice::ReadOnly)) {
         setStyleSheet(QString::fromUtf8(qss.readAll()));
