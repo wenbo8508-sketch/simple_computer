@@ -340,7 +340,7 @@ void TestCalculator::keyboard_result_reused_after_operator()
 
 void TestCalculator::window_title_and_appearance()
 {
-    QCOMPARE(window->windowTitle(), QStringLiteral("带键盘事件的计算器"));
+    QCOMPARE(window->windowTitle(), QStringLiteral("宋文博的计算器"));
     QVERIFY2(!window->styleSheet().isEmpty(), "样式表资源 :/style/style.qss 没有加载成功");
     QVERIFY(window->findChild<QLabel *>("hintLabel") != nullptr);   //键盘提示标签
 }
